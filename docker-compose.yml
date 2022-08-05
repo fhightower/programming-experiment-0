@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  _base:
+    &base
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+      - ./:/code
+
+  dev:
+    <<: *base
+    command: ipython
+
+  test:
+    <<: *base
+    command: pytest
+
