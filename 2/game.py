@@ -11,21 +11,25 @@ from typing import List, Union, Tuple
 from random import randint
 
 Board = List[List[Union[str, int]]]
-MineCoords = List[int]
+MineCoords = List[Tuple[int, int]]
 
 
-def _gen_mine_coords(cols: int, rows: int, mines: int) -> MineCoords:
+def _gen_board(cols: int, rows: int) -> Board:
+    return [[0 for _ in range(cols)] for _ in range(rows)]
+
+
+def _get_mine_coords(board: Board, cols: int, rows: int, mines: int) -> MineCoords:
     if mines > cols * rows:
-        raise RuntimeError("Too many mines...")
+        msg = "There will be a problem as you want more mines than there are squares"
+        raise RuntimeError(msg)
 
     mine_coords = []
-
     while len(mine_coords) < mines:
         col = randint(0, cols - 1)
         row = randint(0, rows - 1)
-        coord = (col, row)
-        if coord not in mine_coords:
-            mine_coords.append(coord)
+        coords = (col, row)
+        if coords not in mine_coords:
+            mine_coords.append(coords)
 
     return mine_coords
 
@@ -36,7 +40,9 @@ def _update_square(board: Board, col: int, row: int) -> Board:
 
     try:
         board[row][col] += 1
-    except (IndexError, TypeError) as e:
+    # IndexError occurs when the row, col doesn't exist on the board...
+    # TypeError occurs when the neighbor is a mine
+    except (IndexError, TypeError):
         pass
 
     return board
@@ -49,45 +55,41 @@ def _update_neighbors(board: Board, col: int, row: int) -> Board:
     row_before = row - 1
     row_after = row + 1
 
-    combos = (
-            (col_before, row_before),
-            (col_before, row),
-            (col_before, row_after),
+    board = _update_square(board, col_before, row_before)
+    board = _update_square(board, col_before, row)
+    board = _update_square(board, col_before, row_after)
 
-            (col, row_before),
-            (col, row_after),
+    board = _update_square(board, col, row_before)
+    board = _update_square(board, col, row_after)
 
-            (col_after, row_before),
-            (col_after, row),
-            (col_after, row_after),
-            )
-
-    for combo in combos:
-        board = _update_square(board, combo[0], combo[1])
+    board = _update_square(board, col_after, row_before)
+    board = _update_square(board, col_after, row)
+    board = _update_square(board, col_after, row_after)
 
     return board
 
 
-def _gen_board(cols: int, rows: int, mine_coords: MineCoords) -> Board:
-    board = [[0 for col in range(cols)] for row in range(rows)]
-
-    for mine in mine_coords:
-        col = mine[0]
-        row = mine[1]
+def _apply_mine_coords(board: Board, mine_coords: MineCoords) -> Board:
+    for coords in mine_coords:
+        col = coords[0]
+        row = coords[1]
 
         board[row][col] = 'x'
         board = _update_neighbors(board, col, row)
-
     return board
 
 
-def create_board(cols: int, rows: int, mines: int):
-    mine_coords = _gen_mine_coords(cols, rows, mines)
-    board = _gen_board(cols, rows, mine_coords)
+def create_board(cols: int, rows: int, mines: int) -> Board:
+    board = _gen_board(cols, rows)
+    mine_coords = _get_mine_coords(board, cols, rows, mines)
+    board = _apply_mine_coords(board, mine_coords)
+
     for row in board:
         for col in row:
             print(col, end=' ')
         print()
+
+    return board
 
 
 create_board(3, 3, 3)

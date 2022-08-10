@@ -1,5 +1,5 @@
 # Iteration One
 
-Approach: TDD
-Total time: 36.0 minutes
+Approach: 'Just do it'
+Total time: 40.6 minutes
 

@@ -1,30 +1,63 @@
 import pytest
 
-from game import _gen_mine_coords, _gen_board
+from game import _gen_board, _get_mine_coords, _apply_mine_coords, _update_neighbors
 
 
-def test_gen_mine_coords():
-    results = _gen_mine_coords(3, 3, 1)
-    assert len(results) == 1
-
-    results = _gen_mine_coords(3, 3, 6)
-    assert len(results) == 6
-
-    results = _gen_mine_coords(3, 3, 9)
-    assert len(results) == 9
-
-    with pytest.raises(RuntimeError):
-        results = _gen_mine_coords(3, 3, 10)
+def test_update_neighbors():
+    board = [[0, 0, 0], [0, 0, 'x']]
+    board = _update_neighbors(board, 2, 1)
+    assert board == [[0, 1, 1], [0, 1, 'x']]
 
 
 def test_gen_board():
-    coords = _gen_mine_coords(1, 1, 1)
-    board = _gen_board(1, 1, coords)
-    assert board == [['x']]
+    rows = 1
+    cols = 1
+    board = _gen_board(cols, rows)
+    assert len(board) == rows
+    assert len(board[0]) == cols
 
-    coords = _gen_mine_coords(2, 1, 1)
-    board = _gen_board(2, 1, coords)
-    assert len(board) == 1
-    assert 'x' in board[0]
-    assert 1 in board[0]
+    rows = 5
+    cols = 4
+    board = _gen_board(cols, rows)
+    assert len(board) == rows
+    assert len(board[0]) == cols
+
+    rows = 3
+    cols = 10
+    board = _gen_board(cols, rows)
+    assert len(board) == rows
+    assert len(board[0]) == cols
+
+
+def test_get_mine_coords():
+    rows = 3
+    cols = 3
+    mines = 3
+    board = _gen_board(cols, rows)
+    mine_coords = _get_mine_coords(board, cols, rows, mines)
+    assert len(mine_coords) == mines
+
+    rows = 1
+    cols = 1
+    mines = 3
+    board = _gen_board(cols, rows)
+    with pytest.raises(RuntimeError):
+        mine_coords = _get_mine_coords(board, cols, rows, mines)
+
+
+def test_apply_mine_coords():
+    rows = 3
+    cols = 3
+    mines = 3
+    board = _gen_board(cols, rows)
+    mine_coords = _get_mine_coords(board, cols, rows, mines)
+    board = _apply_mine_coords(board, mine_coords)
+    mine_count = 0
+
+    for row in board:
+        for col in row:
+            if col == 'x':
+                mine_count += 1
+
+    assert mine_count == mines
 
